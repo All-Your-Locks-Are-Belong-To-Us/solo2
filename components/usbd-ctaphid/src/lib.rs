@@ -16,9 +16,8 @@ generate_macros!();
 
 // pub mod authenticator;
 
-pub mod constants;
 pub mod class;
+pub mod constants;
 pub use class::CtapHid;
 pub mod pipe;
 pub mod types;
-

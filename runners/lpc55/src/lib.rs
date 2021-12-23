@@ -5,9 +5,9 @@ include!(concat!(env!("OUT_DIR"), "/build_constants.rs"));
 // BUT: need to run in release anyway, to have USB work
 use panic_halt as _;
 
-use usb_device::device::UsbVidPid;
 use board::clock_controller;
-pub use board::hal; // re-export for convenience
+pub use board::hal;
+use usb_device::device::UsbVidPid; // re-export for convenience
 
 #[allow(unused_imports)]
 use hal::drivers::timer::Elapsed;
@@ -18,9 +18,8 @@ use types::Board;
 extern crate delog;
 generate_macros!();
 
-pub mod types;
 pub mod initializer;
-
+pub mod types;
 
 // Logging
 #[derive(Debug)]
@@ -40,7 +39,7 @@ impl delog::Flusher for Flusher {
     }
 }
 
-delog!(Delogger, 16*1024, 3*1024, Flusher);
+delog!(Delogger, 16 * 1024, 3 * 1024, Flusher);
 
 #[cfg(any(feature = "log-semihosting", feature = "log-serial"))]
 static FLUSHER: Flusher = Flusher {};
@@ -54,12 +53,9 @@ pub fn init_board(
     types::ApduDispatch,
     types::CtaphidDispatch,
     types::Trussed,
-
     types::Apps,
-
     Option<types::UsbClasses>,
     Option<types::Iso14443>,
-
     types::PerformanceTimer,
     Option<clock_controller::DynamicClockController>,
     types::NfcWaitExtender,
@@ -70,10 +66,12 @@ pub fn init_board(
     #[cfg(any(feature = "log-semihosting", feature = "log-serial"))]
     Delogger::init_default(delog::LevelFilter::Debug, &FLUSHER).ok();
 
-    info_now!("entering init_board {}.{}.{}",
+    info_now!(
+        "entering init_board {}.{}.{}",
         build_constants::CARGO_PKG_VERSION_MAJOR,
         build_constants::CARGO_PKG_VERSION_MINOR,
-        build_constants::CARGO_PKG_VERSION_PATCH);
+        build_constants::CARGO_PKG_VERSION_PATCH
+    );
     let hal = hal::Peripherals::from((device_peripherals, core_peripherals));
 
     #[cfg(not(feature = "no-encrypted-storage"))]
@@ -90,7 +88,7 @@ pub fn init_board(
             manufacturer_name: "SoloKeys",
             product_name: initializer::UsbProductName::UsePfr,
             vid_pid: UsbVidPid(0x1209, 0xbeee),
-        })
+        }),
     };
 
     let mut initializer = initializer::Initializer::new(config, hal.syscon, hal.pmc, hal.anactrl);
@@ -115,16 +113,18 @@ pub fn init_board(
         hal.rng,
         hal.prince,
         hal.flash,
-
-
         hal.rtc,
     );
 
     let _is_passive_mode = initializer.is_in_passive_operation(&everything.clock);
-    let clock_controller = initializer.get_dynamic_clock_control(&mut everything.clock, &mut everything.basic);
+    let clock_controller =
+        initializer.get_dynamic_clock_control(&mut everything.clock, &mut everything.basic);
 
     // rgb.turn_off();
-    info!("init took {} ms", everything.basic.perf_timer.elapsed().0/1000);
+    info!(
+        "init took {} ms",
+        everything.basic.perf_timer.elapsed().0 / 1000
+    );
 
     #[cfg(feature = "provisioner-app")]
     let store = everything.filesystem.store.clone();
@@ -140,22 +140,18 @@ pub fn init_board(
                 stolen_filesystem: internal_fs.as_mut().unwrap(),
                 nfc_powered: _is_passive_mode,
             }
-        }
+        },
     );
 
     (
         everything.interfaces.apdu_dispatch,
         everything.interfaces.ctaphid_dispatch,
         everything.trussed,
-
         apps,
-
         everything.usb.usb_classes,
         everything.nfc.iso14443,
-
         everything.basic.perf_timer,
         clock_controller,
-
         everything.basic.delay_timer,
     )
 }
