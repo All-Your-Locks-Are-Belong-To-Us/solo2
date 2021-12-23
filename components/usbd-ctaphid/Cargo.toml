@@ -15,7 +15,7 @@ serde = { version = "1.0", default-features = false }
 usb-device = "0.2.3"
 
 ctaphid-dispatch = { git = "https://github.com/solokeys/ctaphid-dispatch" }
-ctap-types = { git = "https://github.com/solokeys/ctap-types" }
+ctap-types = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/ctap-types", rev="a622dcd19fce2e246d69c3a8aa36f4971471b235" }
 
 [features]
 default = []
