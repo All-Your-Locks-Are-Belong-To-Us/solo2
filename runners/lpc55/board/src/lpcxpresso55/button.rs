@@ -1,22 +1,11 @@
-use core::convert::Infallible;
+use crate::hal::drivers::timer;
+use crate::hal::peripherals::ctimer;
 use crate::hal::traits::wg::digital::v2::InputPin;
 use crate::hal::traits::wg::timer::CountDown;
-use crate::hal::{
-    self,
-    drivers::pins,
-    typestates::pin,
-};
-use crate::hal::drivers::timer;
-use crate::hal::peripherals::{
-    ctimer,
-};
-use crate::traits::buttons::{
-    Button,State,
-    Press,Edge,
-};
-use crate::hal::typestates::{
-    init_state,
-};
+use crate::hal::typestates::init_state;
+use crate::hal::{self, drivers::pins, typestates::pin};
+use crate::traits::buttons::{Button, Edge, Press, State};
+use core::convert::Infallible;
 use hal::time::DurationExtensions;
 pub type UserButtonPin = pins::Pio1_9;
 pub type WakeupButtonPin = pins::Pio1_18;
@@ -29,8 +18,9 @@ pub type ThreeButtons = XpressoButtons<ctimer::Ctimer1<init_state::Enabled>>;
 // impl<P1,P2,P3, > TouchSensor<P1, P2, P3, >
 // where P1: PinId, P2: PinId, P3: PinId
 
-pub struct XpressoButtons <CTIMER>
-where CTIMER: ctimer::Ctimer<init_state::Enabled>
+pub struct XpressoButtons<CTIMER>
+where
+    CTIMER: ctimer::Ctimer<init_state::Enabled>,
 {
     last_state: State,
     user_button: UserButton,
@@ -38,13 +28,24 @@ where CTIMER: ctimer::Ctimer<init_state::Enabled>
     timer: timer::Timer<CTIMER>,
 }
 
-impl <CTIMER> XpressoButtons <CTIMER>
-where CTIMER: ctimer::Ctimer<init_state::Enabled>
+impl<CTIMER> XpressoButtons<CTIMER>
+where
+    CTIMER: ctimer::Ctimer<init_state::Enabled>,
 {
     // pub fn new (timer: timer::Timer<CTIMER>, user_button: UserButton, wakeup_button: WakeupButton) -> XpressoButtons<CTIMER> {
-    pub fn new (timer: timer::Timer<CTIMER>, gpio: &mut hal::Gpio<hal::Enabled>, iocon: &mut hal::Iocon<hal::Enabled>) -> XpressoButtons<CTIMER> {
-        let user_button = UserButtonPin::take().unwrap().into_gpio_pin(iocon, gpio).into_input();
-        let wakeup_button = WakeupButtonPin::take().unwrap().into_gpio_pin(iocon, gpio).into_input();
+    pub fn new(
+        timer: timer::Timer<CTIMER>,
+        gpio: &mut hal::Gpio<hal::Enabled>,
+        iocon: &mut hal::Iocon<hal::Enabled>,
+    ) -> XpressoButtons<CTIMER> {
+        let user_button = UserButtonPin::take()
+            .unwrap()
+            .into_gpio_pin(iocon, gpio)
+            .into_input();
+        let wakeup_button = WakeupButtonPin::take()
+            .unwrap()
+            .into_gpio_pin(iocon, gpio)
+            .into_input();
         let buts = State {
             a: user_button.is_high().ok().unwrap(),
             b: wakeup_button.is_high().ok().unwrap(),
@@ -59,29 +60,23 @@ where CTIMER: ctimer::Ctimer<init_state::Enabled>
     }
 }
 
-impl<CTIMER> Press for XpressoButtons <CTIMER>
-where CTIMER: ctimer::Ctimer<init_state::Enabled>
+impl<CTIMER> Press for XpressoButtons<CTIMER>
+where
+    CTIMER: ctimer::Ctimer<init_state::Enabled>,
 {
-
     // A minimal button implementation for Xpresso
     fn is_pressed(&self, but: Button) -> bool {
         match but {
-            Button::A=> {
-                self.user_button.is_low().ok().unwrap()
-            }
-            Button::B => {
-                self.wakeup_button.is_low().ok().unwrap()
-            }
-            _ => {
-                self.wakeup_button.is_low().ok().unwrap()
-            }
+            Button::A => self.user_button.is_low().ok().unwrap(),
+            Button::B => self.wakeup_button.is_low().ok().unwrap(),
+            _ => self.wakeup_button.is_low().ok().unwrap(),
         }
     }
-
 }
 
-impl<CTIMER> XpressoButtons <CTIMER>
-where CTIMER: ctimer::Ctimer<init_state::Enabled>
+impl<CTIMER> XpressoButtons<CTIMER>
+where
+    CTIMER: ctimer::Ctimer<init_state::Enabled>,
 {
     fn get_status_debounced(&mut self) -> State {
         // first, remove jitter
@@ -93,10 +88,10 @@ where CTIMER: ctimer::Ctimer<init_state::Enabled>
         if new_state.a != new_state2.a {
             new_state.a = self.last_state.a;
         }
-        if new_state.b != new_state2.b{
+        if new_state.b != new_state2.b {
             new_state.b = self.last_state.b;
         }
-        if new_state.middle != new_state2.middle{
+        if new_state.middle != new_state2.middle {
             new_state.middle = self.last_state.middle;
         }
 
@@ -104,10 +99,10 @@ where CTIMER: ctimer::Ctimer<init_state::Enabled>
     }
 
     fn read_button_edge(&mut self, but: Button, edge_type: bool) -> bool {
-
         let new_state = self.get_status_debounced();
 
-        let mid_edge = (self.last_state.middle ^ new_state.middle) && (self.last_state.middle ^ edge_type);
+        let mid_edge =
+            (self.last_state.middle ^ new_state.middle) && (self.last_state.middle ^ edge_type);
         let top_edge = (self.last_state.a ^ new_state.a) && (self.last_state.a ^ edge_type);
         let bot_edge = (self.last_state.b ^ new_state.b) && (self.last_state.b ^ edge_type);
 
@@ -128,8 +123,9 @@ where CTIMER: ctimer::Ctimer<init_state::Enabled>
     }
 }
 
-impl<CTIMER> Edge for XpressoButtons <CTIMER>
-where CTIMER: ctimer::Ctimer<init_state::Enabled>
+impl<CTIMER> Edge for XpressoButtons<CTIMER>
+where
+    CTIMER: ctimer::Ctimer<init_state::Enabled>,
 {
     /// Non-blockingly wait for the button to be pressed.
     /// This is edge sensitive, meaning it will not complete successfully more than once
@@ -155,7 +151,7 @@ where CTIMER: ctimer::Ctimer<init_state::Enabled>
     }
 
     /// See wait_for_press
-    fn wait_for_any_new_press(&mut self, ) -> nb::Result<Button, Infallible> {
+    fn wait_for_any_new_press(&mut self) -> nb::Result<Button, Infallible> {
         if self.read_button_edge(Button::A, true) {
             Ok(Button::A)
         } else if self.read_button_edge(Button::B, true) {
@@ -168,7 +164,7 @@ where CTIMER: ctimer::Ctimer<init_state::Enabled>
     }
 
     /// See wait_for_release
-    fn wait_for_any_new_release(&mut self, ) -> nb::Result<Button, Infallible> {
+    fn wait_for_any_new_release(&mut self) -> nb::Result<Button, Infallible> {
         if self.read_button_edge(Button::A, false) {
             Ok(Button::A)
         } else if self.read_button_edge(Button::B, false) {
@@ -180,15 +176,19 @@ where CTIMER: ctimer::Ctimer<init_state::Enabled>
         }
     }
 
-    fn wait_for_new_squeeze(&mut self, ) -> nb::Result<(), Infallible> {
+    fn wait_for_new_squeeze(&mut self) -> nb::Result<(), Infallible> {
         let oldstate = self.last_state;
         let a = self.read_button_edge(Button::A, true);
         let b = self.read_button_edge(Button::B, true);
         if a && b {
             Ok(())
         } else {
-            if a { self.last_state.a = oldstate.a; }
-            if b { self.last_state.b = oldstate.b; }
+            if a {
+                self.last_state.a = oldstate.a;
+            }
+            if b {
+                self.last_state.b = oldstate.b;
+            }
             Err(nb::Error::WouldBlock)
         }
     }

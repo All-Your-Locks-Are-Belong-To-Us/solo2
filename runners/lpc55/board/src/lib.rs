@@ -22,10 +22,7 @@ pub mod solo2;
 #[cfg(feature = "board-solo2")]
 pub use solo2 as specifics;
 
-pub use specifics::{
-    button::ThreeButtons,
-    led::RgbLed,
-};
+pub use specifics::{button::ThreeButtons, led::RgbLed};
 
 pub mod clock_controller;
 pub mod nfc;

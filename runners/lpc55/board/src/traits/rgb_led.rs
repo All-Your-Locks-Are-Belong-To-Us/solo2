@@ -7,17 +7,16 @@ pub struct Intensities {
 
 impl From<u32> for Intensities {
     // set all LEDs using (R||G||B) formatted word.
-    fn from(hex: u32) -> Self{
+    fn from(hex: u32) -> Self {
         Intensities {
-            red:   ((hex & 0xff_00_00) >> 16) as _,
+            red: ((hex & 0xff_00_00) >> 16) as _,
             green: ((hex & 0x00_ff_00) >> 8) as _,
-            blue:   (hex & 0x00_00_ff) as _,
+            blue: (hex & 0x00_00_ff) as _,
         }
     }
 }
 
 pub trait RgbLed {
-
     /// Set all LEDs
     fn set(&mut self, intensities: Intensities) {
         self.red(intensities.red);

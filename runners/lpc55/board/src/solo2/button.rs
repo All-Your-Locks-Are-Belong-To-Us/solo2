@@ -1,9 +1,8 @@
-use core::convert::Infallible;
 use crate::hal::{
     self,
     drivers::pins,
     // drivers::Pin,
-    drivers::touch::{Compare, Edge, TouchSensor, ButtonPins, TouchSensorChannel},
+    drivers::touch::{ButtonPins, Compare, Edge, TouchSensor, TouchSensorChannel},
     peripherals::ctimer,
     typestates::{
         init_state,
@@ -11,14 +10,12 @@ use crate::hal::{
         // pin::state::{Special, Analog},
         // pin::gpio::direction,
         // pin::function,
-        ClocksSupportTouchToken
+        ClocksSupportTouchToken,
     },
 };
+use core::convert::Infallible;
 
-use crate::traits::buttons::{
-    self,
-    Button,
-};
+use crate::traits::buttons::{self, Button};
 
 pub type ChargeMatchPin = pins::Pio1_16;
 pub type ButtonTopPin = pins::Pio0_23;
@@ -37,15 +34,19 @@ type SampleTimer = ctimer::Ctimer2<init_state::Enabled>;
 
 pub type ThreeButtons = SoloThreeTouchButtons<ButtonTopPin, ButtonBotPin, ButtonMidPin>;
 
-pub struct SoloThreeTouchButtons<P1,P2,P3>
-where P1: PinId, P2: PinId, P3: PinId{
-    touch_sensor: TouchSensor<P1,P2,P3>
+pub struct SoloThreeTouchButtons<P1, P2, P3>
+where
+    P1: PinId,
+    P2: PinId,
+    P3: PinId,
+{
+    touch_sensor: TouchSensor<P1, P2, P3>,
 }
 
 impl SoloThreeTouchButtons<ButtonTopPin, ButtonBotPin, ButtonMidPin>
 // where P1: PinId, P2: PinId, P3: PinId
 {
-    pub fn new (
+    pub fn new(
         adc: Adc,
         adc_timer: AdcTimer,
         sample_timer: SampleTimer,
@@ -62,70 +63,75 @@ impl SoloThreeTouchButtons<ButtonTopPin, ButtonBotPin, ButtonMidPin>
         let mid = ButtonMidPin::take().unwrap().into_analog_input(iocon, gpio);
         let bot = ButtonBotPin::take().unwrap().into_analog_input(iocon, gpio);
         let charge_match = ChargeMatchPin::take().unwrap().into_match_output(iocon);
-        let button_pins = ButtonPins(
-            top,bot,mid,
+        let button_pins = ButtonPins(top, bot, mid);
+        let touch_sensor = TouchSensor::new(
+            [12_000, 12_000, 12_000],
+            5,
+            adc,
+            adc_timer,
+            sample_timer,
+            charge_match,
+            button_pins,
         );
-        let touch_sensor = TouchSensor::new([
-            12_000,
-            12_000,
-            12_000,
-            ], 5, adc, adc_timer, sample_timer, charge_match, button_pins);
         let touch_sensor = touch_sensor.enabled(dma, token);
-        Self {
-            touch_sensor
+        Self { touch_sensor }
+    }
+
+    /// Map internal cmd number to Button type
+    fn button_get_state(&self, button: buttons::Button, ctype: Compare) -> bool {
+        match button {
+            Button::A => {
+                self.touch_sensor
+                    .get_state(TouchSensorChannel::Channel1, ctype)
+                    .is_active
+            }
+            Button::B => {
+                self.touch_sensor
+                    .get_state(TouchSensorChannel::Channel2, ctype)
+                    .is_active
+            }
+            Button::Middle => {
+                self.touch_sensor
+                    .get_state(TouchSensorChannel::Channel3, ctype)
+                    .is_active
+            }
         }
     }
 
     /// Map internal cmd number to Button type
-    fn button_get_state (&self, button: buttons::Button, ctype: Compare) -> bool {
+    fn button_has_edge(&self, button: Button, edge_type: Edge) -> bool {
         match button {
-            Button::A => {
-                self.touch_sensor.get_state(TouchSensorChannel::Channel1, ctype).is_active
-            }
-            Button::B => {
-                self.touch_sensor.get_state(TouchSensorChannel::Channel2, ctype).is_active
-            }
-            Button::Middle => {
-                self.touch_sensor.get_state(TouchSensorChannel::Channel3, ctype).is_active
-            }
-        }
-    }
-
-    /// Map internal cmd number to Button type
-    fn button_has_edge (&self, button: Button, edge_type: Edge,) -> bool {
-        match button {
-            Button::A => {
-                self.touch_sensor.has_edge(TouchSensorChannel::Channel1, edge_type)
-            }
-            Button::B => {
-                self.touch_sensor.has_edge(TouchSensorChannel::Channel2, edge_type)
-            }
-            Button::Middle => {
-                self.touch_sensor.has_edge(TouchSensorChannel::Channel3, edge_type)
-            }
-
+            Button::A => self
+                .touch_sensor
+                .has_edge(TouchSensorChannel::Channel1, edge_type),
+            Button::B => self
+                .touch_sensor
+                .has_edge(TouchSensorChannel::Channel2, edge_type),
+            Button::Middle => self
+                .touch_sensor
+                .has_edge(TouchSensorChannel::Channel3, edge_type),
         }
     }
 
     fn button_reset_state(&self, button: Button, offset: i32) {
         match button {
             Button::A => {
-                self.touch_sensor.reset_results(TouchSensorChannel::Channel1, offset);
+                self.touch_sensor
+                    .reset_results(TouchSensorChannel::Channel1, offset);
             }
             Button::B => {
-                self.touch_sensor.reset_results(TouchSensorChannel::Channel2, offset);
+                self.touch_sensor
+                    .reset_results(TouchSensorChannel::Channel2, offset);
             }
             Button::Middle => {
-                self.touch_sensor.reset_results(TouchSensorChannel::Channel3, offset);
+                self.touch_sensor
+                    .reset_results(TouchSensorChannel::Channel3, offset);
             }
         }
     }
-
-
 }
 
-impl buttons::Press for SoloThreeTouchButtons<ButtonTopPin, ButtonBotPin, ButtonMidPin>
-{
+impl buttons::Press for SoloThreeTouchButtons<ButtonTopPin, ButtonBotPin, ButtonMidPin> {
     fn is_pressed(&self, button: buttons::Button) -> bool {
         self.button_get_state(button, Compare::BelowThreshold)
     }
@@ -135,8 +141,7 @@ impl buttons::Press for SoloThreeTouchButtons<ButtonTopPin, ButtonBotPin, Button
     }
 }
 
-impl buttons::Edge for SoloThreeTouchButtons<ButtonTopPin, ButtonBotPin, ButtonMidPin>
-{
+impl buttons::Edge for SoloThreeTouchButtons<ButtonTopPin, ButtonBotPin, ButtonMidPin> {
     fn wait_for_new_press(&mut self, button: Button) -> nb::Result<(), Infallible> {
         let result = self.button_has_edge(button, Edge::Falling);
 
@@ -145,9 +150,8 @@ impl buttons::Edge for SoloThreeTouchButtons<ButtonTopPin, ButtonBotPin, ButtonM
             self.button_reset_state(button, -1);
             Ok(())
         } else {
-            return Err(nb::Error::WouldBlock)
+            return Err(nb::Error::WouldBlock);
         }
-
     }
 
     fn wait_for_new_release(&mut self, button: Button) -> nb::Result<(), Infallible> {
@@ -157,18 +161,15 @@ impl buttons::Edge for SoloThreeTouchButtons<ButtonTopPin, ButtonBotPin, ButtonM
             self.button_reset_state(button, 1);
             Ok(())
         } else {
-            return Err(nb::Error::WouldBlock)
+            return Err(nb::Error::WouldBlock);
         }
-
     }
 
     /// See wait_for_press
-    fn wait_for_any_new_press(&mut self, ) -> nb::Result<Button, Infallible> {
-
+    fn wait_for_any_new_press(&mut self) -> nb::Result<Button, Infallible> {
         if self.wait_for_new_press(Button::A).is_ok() {
             Ok(Button::A)
-        }
-        else if self.wait_for_new_press(Button::B).is_ok() {
+        } else if self.wait_for_new_press(Button::B).is_ok() {
             Ok(Button::B)
         } else if self.wait_for_new_press(Button::Middle).is_ok() {
             Ok(Button::Middle)
@@ -178,11 +179,10 @@ impl buttons::Edge for SoloThreeTouchButtons<ButtonTopPin, ButtonBotPin, ButtonM
     }
 
     /// See wait_for_release
-    fn wait_for_any_new_release(&mut self, ) -> nb::Result<Button, Infallible> {
+    fn wait_for_any_new_release(&mut self) -> nb::Result<Button, Infallible> {
         if self.wait_for_new_release(Button::A).is_ok() {
             Ok(Button::A)
-        }
-        else if self.wait_for_new_release(Button::B).is_ok() {
+        } else if self.wait_for_new_release(Button::B).is_ok() {
             Ok(Button::B)
         } else if self.wait_for_new_release(Button::Middle).is_ok() {
             Ok(Button::Middle)
@@ -200,8 +200,7 @@ impl buttons::Edge for SoloThreeTouchButtons<ButtonTopPin, ButtonBotPin, ButtonM
             self.button_reset_state(Button::B, -1);
             Ok(())
         } else {
-            return Err(nb::Error::WouldBlock)
+            return Err(nb::Error::WouldBlock);
         }
     }
 }
-

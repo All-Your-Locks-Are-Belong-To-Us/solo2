@@ -1,23 +1,18 @@
-use std::{fs::File, io::Write};
 pub use embedded_hal::blocking::rng;
-use littlefs2::{const_ram_storage, consts};
 use littlefs2::fs::{Allocation, Filesystem};
+use littlefs2::{const_ram_storage, consts};
+use std::{fs::File, io::Write};
 use trussed::types::{LfsResult, LfsStorage};
 
-use trussed::platform::{
-    ui,
-    reboot,
-    consent,
-};
+use trussed::platform::{consent, reboot, ui};
 use trussed::{platform, store};
 
 pub use generic_array::{
-    GenericArray,
     typenum::{U16, U512},
+    GenericArray,
 };
 
-use generic_array::typenum::{U256, U1022};
-
+use generic_array::typenum::{U1022, U256};
 
 const SOLO_STATE: &'static str = "solo-state.bin";
 
@@ -51,11 +46,11 @@ impl FileFlash {
 
         if let Ok(contents) = std::fs::read(SOLO_STATE) {
             println!("loaded {}", SOLO_STATE);
-            state.copy_from_slice( contents.as_slice() );
-            Self {state}
+            state.copy_from_slice(contents.as_slice());
+            Self { state }
         } else {
             println!("No state yet, creating");
-            Self {state}
+            Self { state }
         }
     }
 }
@@ -71,16 +66,15 @@ impl littlefs2::driver::Storage for FileFlash {
     type CACHE_SIZE = littlefs_params::CACHE_SIZE;
     type LOOKAHEADWORDS_SIZE = littlefs_params::LOOKAHEADWORDS_SIZE;
 
-
     fn read(&self, off: usize, buf: &mut [u8]) -> LfsResult<usize> {
-        for i in 0 .. buf.len() {
+        for i in 0..buf.len() {
             buf[i] = self.state[i + off];
         }
         Ok(buf.len())
     }
 
     fn write(&mut self, off: usize, data: &[u8]) -> LfsResult<usize> {
-        for i in 0 .. data.len() {
+        for i in 0..data.len() {
             self.state[i + off] = data[i];
         }
         let mut buffer = File::create(SOLO_STATE).unwrap();
@@ -90,14 +84,13 @@ impl littlefs2::driver::Storage for FileFlash {
     }
 
     fn erase(&mut self, off: usize, len: usize) -> LfsResult<usize> {
-        for i in 0 .. len {
+        for i in 0..len {
             self.state[i + off] = 0;
         }
         let mut buffer = File::create(SOLO_STATE).unwrap();
         buffer.write(&self.state).unwrap();
         Ok(len)
     }
-
 }
 
 // 8KB of RAM
@@ -123,13 +116,12 @@ const_ram_storage!(
 // TODO: make this optional
 const_ram_storage!(ExternalStorage, 1024);
 
-store!(Store,
+store!(
+    Store,
     Internal: FileFlash,
     External: ExternalStorage,
     Volatile: VolatileStorage
 );
-
-
 
 // #[derive(Default)]
 // pub struct Rng {
@@ -148,26 +140,19 @@ store!(Store,
 //     }
 // }
 
-
 #[derive(Default)]
-pub struct UserInterface {
-}
+pub struct UserInterface {}
 
-impl trussed::platform::UserInterface for UserInterface
-{
+impl trussed::platform::UserInterface for UserInterface {
     fn check_user_presence(&mut self) -> consent::Level {
         consent::Level::Normal
     }
 
     fn set_status(&mut self, status: ui::Status) {
-
         println!("Set status: {:?}", status);
-
     }
 
-    fn refresh(&mut self) {
-
-    }
+    fn refresh(&mut self) {}
 
     fn uptime(&mut self) -> core::time::Duration {
         core::time::Duration::from_millis(1000)
@@ -177,32 +162,33 @@ impl trussed::platform::UserInterface for UserInterface
         println!("Restart!  ({:?})", to);
         std::process::exit(25);
     }
-
 }
 
-platform!(Board,
-    R: chacha20::ChaCha8Rng,
-    S: Store,
-    UI: UserInterface,
-);
+platform!(Board, R: chacha20::ChaCha8Rng, S: Store, UI: UserInterface,);
 
-fn main () {
-
+fn main() {
     let filesystem = FileFlash::new();
 
     static mut INTERNAL_STORAGE: Option<FileFlash> = None;
-    unsafe { INTERNAL_STORAGE = Some(filesystem); }
+    unsafe {
+        INTERNAL_STORAGE = Some(filesystem);
+    }
     static mut INTERNAL_FS_ALLOC: Option<Allocation<FileFlash>> = None;
-    unsafe { INTERNAL_FS_ALLOC = Some(Filesystem::allocate()); }
+    unsafe {
+        INTERNAL_FS_ALLOC = Some(Filesystem::allocate());
+    }
 
     static mut EXTERNAL_STORAGE: ExternalStorage = ExternalStorage::new();
     static mut EXTERNAL_FS_ALLOC: Option<Allocation<ExternalStorage>> = None;
-    unsafe { EXTERNAL_FS_ALLOC = Some(Filesystem::allocate()); }
+    unsafe {
+        EXTERNAL_FS_ALLOC = Some(Filesystem::allocate());
+    }
 
     static mut VOLATILE_STORAGE: VolatileStorage = VolatileStorage::new();
     static mut VOLATILE_FS_ALLOC: Option<Allocation<VolatileStorage>> = None;
-    unsafe { VOLATILE_FS_ALLOC = Some(Filesystem::allocate()); }
-
+    unsafe {
+        VOLATILE_FS_ALLOC = Some(Filesystem::allocate());
+    }
 
     let store = Store::claim().unwrap();
 
@@ -220,19 +206,20 @@ fn main () {
 
     if result.is_err() {
         println!("Not yet formatted!  Formatting..");
-        store.mount(
-            unsafe { INTERNAL_FS_ALLOC.as_mut().unwrap() },
-            // unsafe { &mut INTERNAL_STORAGE },
-            unsafe { INTERNAL_STORAGE.as_mut().unwrap() },
-            unsafe { EXTERNAL_FS_ALLOC.as_mut().unwrap() },
-            unsafe { &mut EXTERNAL_STORAGE },
-            unsafe { VOLATILE_FS_ALLOC.as_mut().unwrap() },
-            unsafe { &mut VOLATILE_STORAGE },
-            // to trash existing data, set to true
-            true,
-        ).unwrap();
+        store
+            .mount(
+                unsafe { INTERNAL_FS_ALLOC.as_mut().unwrap() },
+                // unsafe { &mut INTERNAL_STORAGE },
+                unsafe { INTERNAL_STORAGE.as_mut().unwrap() },
+                unsafe { EXTERNAL_FS_ALLOC.as_mut().unwrap() },
+                unsafe { &mut EXTERNAL_STORAGE },
+                unsafe { VOLATILE_FS_ALLOC.as_mut().unwrap() },
+                unsafe { &mut VOLATILE_STORAGE },
+                // to trash existing data, set to true
+                true,
+            )
+            .unwrap();
     }
-
 
     use trussed::service::SeedableRng;
     let rng = chacha20::ChaCha8Rng::from_seed([0u8; 32]);

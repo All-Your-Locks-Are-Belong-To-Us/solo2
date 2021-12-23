@@ -3,11 +3,11 @@ use core::convert::TryInto;
 
 use crate::hal;
 use hal::drivers::timer;
+use hal::peripherals::ctimer;
 use interchange::Interchange;
 use littlefs2::{const_ram_storage, consts};
 use trussed::types::{LfsResult, LfsStorage};
 use trussed::{platform, store};
-use hal::peripherals::ctimer;
 
 #[cfg(feature = "no-encrypted-storage")]
 use hal::littlefs2_filesystem;
@@ -25,7 +25,7 @@ pub type FlashStorage = PlainFilesystem;
 pub type FlashStorage = PrinceFilesystem;
 
 pub mod usb;
-pub use usb::{UsbClasses, EnabledUsbPeripheral, SerialClass, CcidClass, CtapHidClass};
+pub use usb::{CcidClass, CtapHidClass, EnabledUsbPeripheral, SerialClass, UsbClasses};
 
 // 8KB of RAM
 const_ram_storage!(
@@ -50,7 +50,8 @@ const_ram_storage!(
 // TODO: make this optional
 const_ram_storage!(ExternalStorage, 1024);
 
-store!(Store,
+store!(
+    Store,
     Internal: FlashStorage,
     External: ExternalStorage,
     Volatile: VolatileStorage
@@ -59,7 +60,8 @@ store!(Store,
 pub type ThreeButtons = board::ThreeButtons;
 pub type RgbLed = board::RgbLed;
 
-platform!(Board,
+platform!(
+    Board,
     R: hal::peripherals::rng::Rng<hal::Enabled>,
     S: Store,
     UI: board::trussed::UserInterface<ThreeButtons, RgbLed>,
@@ -97,10 +99,11 @@ impl admin_app::Reboot for Lpc55Reboot {
         // Erasing the first flash page & rebooting will keep processor in bootrom persistently.
         // This is however destructive, as a valid firmware will need to be flashed.
         use hal::traits::flash::WriteErase;
-        let flash = unsafe { hal::peripherals::flash::Flash::steal() }.enabled(
-            &mut unsafe {hal::peripherals::syscon::Syscon::steal()}
-        );
-        hal::drivers::flash::FlashGordon::new(flash).erase_page(0).ok();
+        let flash = unsafe { hal::peripherals::flash::Flash::steal() }
+            .enabled(&mut unsafe { hal::peripherals::syscon::Syscon::steal() });
+        hal::drivers::flash::FlashGordon::new(flash)
+            .erase_page(0)
+            .ok();
         hal::raw::SCB::sys_reset()
     }
 }
@@ -108,7 +111,7 @@ impl admin_app::Reboot for Lpc55Reboot {
 #[cfg(feature = "admin-app")]
 pub type AdminApp = admin_app::App<TrussedClient, Lpc55Reboot>;
 #[cfg(feature = "piv-authenticator")]
-pub type PivApp = piv_authenticator::Authenticator<TrussedClient, {apdu_dispatch::command::SIZE}>;
+pub type PivApp = piv_authenticator::Authenticator<TrussedClient, { apdu_dispatch::command::SIZE }>;
 #[cfg(feature = "oath-authenticator")]
 pub type OathApp = oath_authenticator::Authenticator<TrussedClient>;
 #[cfg(feature = "fido-authenticator")]
@@ -118,15 +121,14 @@ pub type NdefApp = ndef_app::App<'static>;
 #[cfg(feature = "provisioner-app")]
 pub type ProvisionerApp = provisioner_app::Provisioner<Store, FlashStorage, TrussedClient>;
 
-use apdu_dispatch::{App as ApduApp, command::SIZE as CommandSize, response::SIZE as ResponseSize};
-use ctaphid_dispatch::app::{App as CtaphidApp};
+use apdu_dispatch::{command::SIZE as CommandSize, response::SIZE as ResponseSize, App as ApduApp};
+use ctaphid_dispatch::app::App as CtaphidApp;
 
 pub type DynamicClockController = board::clock_controller::DynamicClockController;
 pub type NfcWaitExtender = timer::Timer<ctimer::Ctimer0<hal::typestates::init_state::Enabled>>;
 pub type PerformanceTimer = timer::Timer<ctimer::Ctimer4<hal::typestates::init_state::Enabled>>;
 
 pub trait TrussedApp: Sized {
-
     /// non-portable resources needed by this Trussed app
     type NonPortable;
 
@@ -136,18 +138,15 @@ pub trait TrussedApp: Sized {
     fn with_client(trussed: TrussedClient, non_portable: Self::NonPortable) -> Self;
 
     fn with(trussed: &mut trussed::Service<crate::Board>, non_portable: Self::NonPortable) -> Self {
-        let (trussed_requester, trussed_responder) = trussed::pipe::TrussedInterchange::claim()
-            .expect("could not setup TrussedInterchange");
+        let (trussed_requester, trussed_responder) =
+            trussed::pipe::TrussedInterchange::claim().expect("could not setup TrussedInterchange");
 
         let mut client_id = littlefs2::path::PathBuf::new();
         client_id.push(Self::CLIENT_ID.try_into().unwrap());
         assert!(trussed.add_endpoint(trussed_responder, client_id).is_ok());
 
         let syscaller = Syscall::default();
-        let trussed_client = TrussedClient::new(
-            trussed_requester,
-            syscaller,
-        );
+        let trussed_client = TrussedClient::new(trussed_requester, syscaller);
 
         let app = Self::with_client(trussed_client, non_portable);
         app
@@ -211,10 +210,16 @@ impl TrussedApp for ProvisionerApp {
     const CLIENT_ID: &'static [u8] = b"attn\0";
 
     type NonPortable = ProvisionerNonPortable;
-    fn with_client(trussed: TrussedClient, ProvisionerNonPortable { store, stolen_filesystem, nfc_powered }: Self::NonPortable) -> Self {
+    fn with_client(
+        trussed: TrussedClient,
+        ProvisionerNonPortable {
+            store,
+            stolen_filesystem,
+            nfc_powered,
+        }: Self::NonPortable,
+    ) -> Self {
         Self::new(trussed, store, stolen_filesystem, nfc_powered)
     }
-
 }
 
 pub struct Apps {
@@ -235,8 +240,7 @@ pub struct Apps {
 impl Apps {
     pub fn new(
         trussed: &mut trussed::Service<crate::Board>,
-        #[cfg(feature = "provisioner-app")]
-        provisioner: ProvisionerNonPortable
+        #[cfg(feature = "provisioner-app")] provisioner: ProvisionerNonPortable,
     ) -> Self {
         #[cfg(feature = "admin-app")]
         let admin = AdminApp::with(trussed, ());
@@ -269,9 +273,7 @@ impl Apps {
 
     pub fn apdu_dispatch<F, T>(&mut self, f: F) -> T
     where
-        F: FnOnce(&mut [&mut dyn
-                ApduApp<CommandSize, ResponseSize>
-            ]) -> T
+        F: FnOnce(&mut [&mut dyn ApduApp<CommandSize, ResponseSize>]) -> T,
     {
         f(&mut [
             #[cfg(feature = "ndef-app")]
@@ -291,7 +293,7 @@ impl Apps {
 
     pub fn ctaphid_dispatch<F, T>(&mut self, f: F) -> T
     where
-        F: FnOnce(&mut [&mut dyn CtaphidApp ]) -> T
+        F: FnOnce(&mut [&mut dyn CtaphidApp]) -> T,
     {
         f(&mut [
             #[cfg(feature = "fido-authenticator")]
