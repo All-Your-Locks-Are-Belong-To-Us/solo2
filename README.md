@@ -49,12 +49,14 @@ Please **do not** send PRs to expand on getting started generalities, just edit 
 ### Boards
 
 Head to [runnners/lpc55/board](runners/lpc55/board) for an overview on the possible embedded platforms the firmware
-currently supports.
+currently supports.  
+By default, the firmware will be built for an evaluation kit ([LPCXpresso55S69](https://www.nxp.com/design/development-boards/lpcxpresso-boards/lpcxpresso55s69-development-board:LPC55S69-EVK)).
+For building for the hacker version, see [here](#building-for-solo2-hacker).
 
 ### Compiling
 
 Head to [runners/lpc55](runners/lpc55) to get started, and try `make build-dev`, which compiles
-the entire firmware bundle using features convenient for getting started.
+the entire firmware bundle using features convenient for getting started *for the lpcxpresso55 development kit*.
 
 With `make run-dev`, it will try to connect to a GDB server to flash and run the firmware.
 One way to run a GDB server is `JLinkGDBServer -strict -device LPC55S69 -if SWD -vd`
@@ -65,7 +67,13 @@ To enable logs, you can change the feature flags on each crate.  Then logs will 
 cargo run --release --features board-lpcxpresso55,log-all,fido-authenticator/log-all,ctaphid-dispatch/log-info,ctap-types/log-all
 ```
 
-#### License
+#### Building For Solo2 Hacker
+
+Use `make build-provisioner BOARD=solo2` from the project root to build the firmware for the hacker version of the stick.
+This build has some development features activated and contains the provisioner app.
+The firmware output is in `runners/lpc55/provisioner.bin`
+
+### License
 
 Solo is fully open source.
 
