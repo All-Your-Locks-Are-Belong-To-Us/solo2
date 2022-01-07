@@ -15,13 +15,15 @@ serde = { version = "1", default-features = false }
 
 apdu-dispatch = { git = "https://github.com/solokeys/apdu-dispatch" }
 ctaphid-dispatch = { git = "https://github.com/solokeys/ctaphid-dispatch" }
-ctap-types = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/ctap-types", rev="a622dcd19fce2e246d69c3a8aa36f4971471b235" }
-fido-authenticator = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/fido-authenticator", rev="b99423728ba04d2efd9d31a1967b1a3dbd641bfa" }
+ctap-types = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/ctap-types", rev = "efcc04c27beedb1c95fc2a072256b100ae2252c1" }
+fido-authenticator = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/fido-authenticator", rev = "9e85dd204e1138abe26c8df4a1364be198ee3a88" }
 iso7816 = { git = "https://github.com/ycrypto/iso7816" }
 trussed = { git = "https://github.com/trussed-dev/trussed" }
 
 [features]
 default = []
+
+enable-fido-2-1-pre = ["fido-authenticator/enable-fido-2-1-pre"]
 
 log-all = []
 log-none = []

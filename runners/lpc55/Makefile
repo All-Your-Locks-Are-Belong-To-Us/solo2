@@ -1,7 +1,8 @@
 BOARD ?= lpcxpresso55
-DEVELOP := --features board-$(BOARD),develop
-DEV_PROVISIONER := --features board-$(BOARD),develop-provisioner
-PROVISIONER := --features board-$(BOARD),board-provisioner
+ADDITIONAL_FEATURES ?=
+DEVELOP := --features board-$(BOARD),develop,$(ADDITIONAL_FEATURES)
+DEV_PROVISIONER := --features board-$(BOARD),develop-provisioner,$(ADDITIONAL_FEATURES)
+PROVISIONER := --features board-$(BOARD),board-provisioner,$(ADDITIONAL_FEATURES)
 
 # builds firmware bundle with development features,
 # i.e., no encrypted storage, etc.

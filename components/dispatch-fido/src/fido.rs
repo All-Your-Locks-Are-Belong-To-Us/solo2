@@ -108,6 +108,10 @@ where
                                 self.response_from_object(Some(response), reply)
                             }
 
+                            Response::LargeBlobs(response) => {
+                                self.response_from_object(Some(response), reply)
+                            }
+
                             Response::Reset => self.response_from_object::<()>(None, reply),
 
                             Response::Vendor => self.response_from_object::<()>(None, reply),

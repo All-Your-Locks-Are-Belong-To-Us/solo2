@@ -26,11 +26,11 @@ usb-device = "0.2.3"
 # usbd-hid = { version = "0.4.5", optional = true }
 usbd-serial = "0.1.0"
 
-admin-app = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/admin-app", optional = true, rev="99951ba7bc2c577dac1c7a1bb74999eb29e01a34" }
+admin-app = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/admin-app", optional = true, rev = "99951ba7bc2c577dac1c7a1bb74999eb29e01a34" }
 apdu-dispatch = { git = "https://github.com/solokeys/apdu-dispatch" }
 ctaphid-dispatch = { git = "https://github.com/solokeys/ctaphid-dispatch" }
-ctap-types = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/ctap-types", rev="a622dcd19fce2e246d69c3a8aa36f4971471b235" }
-fido-authenticator = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/fido-authenticator", optional = true, rev="b99423728ba04d2efd9d31a1967b1a3dbd641bfa" }
+ctap-types = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/ctap-types", rev = "efcc04c27beedb1c95fc2a072256b100ae2252c1" }
+fido-authenticator = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/fido-authenticator", optional = true, rev = "9e85dd204e1138abe26c8df4a1364be198ee3a88" }
 oath-authenticator = { git = "https://github.com/trussed-dev/oath-authenticator", features = ["apdu-dispatch"], optional = true }
 piv-authenticator = { git = "https://github.com/solokeys/piv-authenticator", features = ["apdu-dispatch"], optional = true }
 trussed = { git = "https://github.com/trussed-dev/trussed" }
@@ -101,6 +101,9 @@ log-info = []
 log-debug = []
 log-warn = []
 log-error = []
+
+# FIDO
+enable-fido-2-1-pre = ["fido-authenticator/enable-fido-2-1-pre", "dispatch-fido/enable-fido-2-1-pre"]
 
 # patch dependencies like so to test local changes
 

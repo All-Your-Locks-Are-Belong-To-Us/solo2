@@ -101,6 +101,16 @@ pub fn parse_cbor(data: &[u8]) -> core::result::Result<Request, CtapMappingError
             // TODO: ensure earlier that RPC send queue is empty
         }
 
+        #[cfg(feature = "enable-fido-2-1-pre")]
+        Operation::LargeBlobs => {
+            info!("largeBlobs");
+            match cbor_deserialize(&data[1..]) {
+                Ok(params) => Ok(Request::Ctap2(ctap2::Request::LargeBlobs(params))),
+                Err(error) => Err(CtapMappingError::ParsingError(error)),
+            }
+            // TODO: ensure earlier that RPC send queue is empty
+        }
+
         Operation::Vendor(vendor_operation) => {
             info!("authenticatorVendor({:?})", &vendor_operation);
 
