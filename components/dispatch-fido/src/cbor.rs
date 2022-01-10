@@ -9,6 +9,7 @@ use ctap_types::{
 pub enum CtapMappingError {
     InvalidCommand(u8),
     ParsingError(SerdeError),
+    Custom(AuthenticatorError),
 }
 
 impl From<CtapMappingError> for AuthenticatorError {
@@ -19,6 +20,7 @@ impl From<CtapMappingError> for AuthenticatorError {
                 SerdeError::SerdeMissingField => AuthenticatorError::MissingParameter,
                 _ => AuthenticatorError::InvalidCbor,
             },
+            CtapMappingError::Custom(err) => err,
         }
     }
 }
@@ -106,7 +108,14 @@ pub fn parse_cbor(data: &[u8]) -> core::result::Result<Request, CtapMappingError
             info!("largeBlobs");
             match cbor_deserialize(&data[1..]) {
                 Ok(params) => Ok(Request::Ctap2(ctap2::Request::LargeBlobs(params))),
-                Err(error) => Err(CtapMappingError::ParsingError(error)),
+                Err(error) => match error {
+                    // As all fields are optional, except offset, only offset can be the culprit here.
+                    // In that case, the standard requires us to return "InvalidParameter".
+                    SerdeError::SerdeMissingField => Err(CtapMappingError::Custom(
+                        AuthenticatorError::InvalidParameter,
+                    )),
+                    _ => Err(CtapMappingError::ParsingError(error)),
+                },
             }
             // TODO: ensure earlier that RPC send queue is empty
         }

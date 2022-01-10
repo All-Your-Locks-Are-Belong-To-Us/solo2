@@ -13,10 +13,10 @@ heapless-bytes = "0.3"
 interchange = "0.2.0"
 serde = { version = "1", default-features = false }
 
-apdu-dispatch = { git = "https://github.com/solokeys/apdu-dispatch" }
-ctaphid-dispatch = { git = "https://github.com/solokeys/ctaphid-dispatch" }
-ctap-types = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/ctap-types", rev = "efcc04c27beedb1c95fc2a072256b100ae2252c1" }
-fido-authenticator = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/fido-authenticator", rev = "9e85dd204e1138abe26c8df4a1364be198ee3a88" }
+apdu-dispatch = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/apdu-dispatch", rev = "b50d7a8abfa83bc3136a51d5a051b70f5f437e61" }
+ctaphid-dispatch = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/ctaphid-dispatch" }
+ctap-types = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/ctap-types", rev = "03581bab46df23d8acb5fcfb8d74db6626753394" }
+fido-authenticator = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/fido-authenticator", rev = "ede8798f4735f94445babf2055d2ec9769145582" }
 iso7816 = { git = "https://github.com/ycrypto/iso7816" }
 trussed = { git = "https://github.com/trussed-dev/trussed" }
 

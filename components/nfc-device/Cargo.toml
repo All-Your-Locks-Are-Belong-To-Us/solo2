@@ -10,7 +10,7 @@ embedded-time = "0.12"
 heapless = "0.7"
 nb = "1"
 
-apdu-dispatch = { git = "https://github.com/solokeys/apdu-dispatch" }
+apdu-dispatch = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/apdu-dispatch", rev = "b50d7a8abfa83bc3136a51d5a051b70f5f437e61" }
 iso7816 = { git = "https://github.com/ycrypto/iso7816" }
 interchange = "0.2.1"
 

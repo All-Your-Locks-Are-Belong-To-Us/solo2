@@ -16,7 +16,7 @@ path = "src/main.rs"
 
 [dependencies]
 lpc55-rtic = "0.5.7"
-cortex-m-semihosting = {version = "0.3.5", optional = true }
+cortex-m-semihosting = { version = "0.3.5", optional = true }
 delog = "0.1.1"
 heapless = "0.6"
 interchange = "0.2.0"
@@ -26,25 +26,29 @@ usb-device = "0.2.3"
 # usbd-hid = { version = "0.4.5", optional = true }
 usbd-serial = "0.1.0"
 
-admin-app = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/admin-app", optional = true, rev = "99951ba7bc2c577dac1c7a1bb74999eb29e01a34" }
-apdu-dispatch = { git = "https://github.com/solokeys/apdu-dispatch" }
-ctaphid-dispatch = { git = "https://github.com/solokeys/ctaphid-dispatch" }
-ctap-types = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/ctap-types", rev = "efcc04c27beedb1c95fc2a072256b100ae2252c1" }
-fido-authenticator = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/fido-authenticator", optional = true, rev = "9e85dd204e1138abe26c8df4a1364be198ee3a88" }
-oath-authenticator = { git = "https://github.com/trussed-dev/oath-authenticator", features = ["apdu-dispatch"], optional = true }
-piv-authenticator = { git = "https://github.com/solokeys/piv-authenticator", features = ["apdu-dispatch"], optional = true }
+admin-app = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/admin-app", optional = true, rev = "16ce80d8773b37a4bd5a990f32f71eb40dc0fa74" }
+apdu-dispatch = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/apdu-dispatch", rev = "db6a9e5fed3c1d9ad62f43057ebf5e8951a11d9b" }
+ctaphid-dispatch = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/ctaphid-dispatch", rev = "7a2c086f12a3913546e347ee63dc28b18683484a" }
+ctap-types = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/ctap-types", rev = "87d003bf09fd20c2bde1a0fe58c1a2317906c1ff" }
+fido-authenticator = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/fido-authenticator", optional = true, rev = "783ebda23dc17956e44265d41eacc7a7154f7b51" }
+oath-authenticator = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/oath-authenticator", rev = "9652c56f4083d47cf232d7ef027d383084ddf42a", features = [
+    "apdu-dispatch",
+], optional = true }
+piv-authenticator = { git = "https://github.com/solokeys/piv-authenticator", features = [
+    "apdu-dispatch",
+], optional = true }
 trussed = { git = "https://github.com/trussed-dev/trussed" }
 
 # board
 board = { path = "board" }
 
 # components
-dispatch-fido = {path = "../../components/dispatch-fido"}
+dispatch-fido = { path = "../../components/dispatch-fido" }
 ndef-app = { path = "../../components/ndef-app", optional = true }
 # NB: when using this app, need to raise trussed/clients-5
 provisioner-app = { path = "../../components/provisioner-app", optional = true }
-fm11nc08 = {path = "../../components/fm11nc08"}
-nfc-device = {path = "../../components/nfc-device"}
+fm11nc08 = { path = "../../components/fm11nc08" }
+nfc-device = { path = "../../components/nfc-device" }
 usbd-ccid = { path = "../../components/usbd-ccid" }
 usbd-ctaphid = { path = "../../components/usbd-ctaphid" }
 
@@ -57,11 +61,35 @@ panic-halt = "0.2.0"
 littlefs2 = { version = "0.3.2", features = ["c-stubs"] }
 
 [features]
-default = ["admin-app", "fido-authenticator", "ndef-app", "oath-authenticator", "trussed/clients-3"]
+default = [
+    "admin-app",
+    "fido-authenticator",
+    "ndef-app",
+    "oath-authenticator",
+    "trussed/clients-3",
+]
 
-develop = ["piv-authenticator", "no-encrypted-storage", "no-buttons", "no-reset-time-window", "trussed/clients-4"]
-develop-provisioner = ["piv-authenticator", "no-encrypted-storage", "no-buttons", "no-reset-time-window", "provisioner-app", "trussed/clients-5"]
-board-provisioner = ["no-encrypted-storage", "no-reset-time-window", "provisioner-app", "trussed/clients-5"]
+develop = [
+    "piv-authenticator",
+    "no-encrypted-storage",
+    "no-buttons",
+    "no-reset-time-window",
+    "trussed/clients-4",
+]
+develop-provisioner = [
+    "piv-authenticator",
+    "no-encrypted-storage",
+    "no-buttons",
+    "no-reset-time-window",
+    "provisioner-app",
+    "trussed/clients-5",
+]
+board-provisioner = [
+    "no-encrypted-storage",
+    "no-reset-time-window",
+    "provisioner-app",
+    "trussed/clients-5",
+]
 
 # Do not use encryption for the filesystem
 no-encrypted-storage = []
@@ -92,7 +120,9 @@ serial = []
 # Reconfigure the NFC chip in any case
 reconfigure-nfc = []
 no-clock-controller = ["board/no-clock-controller"]
-enable-clock-controller-signal-pin = ["board/enable-clock-controller-signal-pin"]
+enable-clock-controller-signal-pin = [
+    "board/enable-clock-controller-signal-pin",
+]
 # very-twitchy-mouse = ["usbd-hid"]
 
 log-all = []
@@ -103,7 +133,10 @@ log-warn = []
 log-error = []
 
 # FIDO
-enable-fido-2-1-pre = ["fido-authenticator/enable-fido-2-1-pre", "dispatch-fido/enable-fido-2-1-pre"]
+enable-fido-2-1-pre = [
+    "fido-authenticator/enable-fido-2-1-pre",
+    "dispatch-fido/enable-fido-2-1-pre",
+]
 
 # patch dependencies like so to test local changes
 

@@ -14,8 +14,8 @@ interchange = "0.2.0"
 serde = { version = "1.0", default-features = false }
 usb-device = "0.2.3"
 
-ctaphid-dispatch = { git = "https://github.com/solokeys/ctaphid-dispatch" }
-ctap-types = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/ctap-types", rev = "efcc04c27beedb1c95fc2a072256b100ae2252c1" }
+ctaphid-dispatch = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/ctaphid-dispatch" }
+ctap-types = { git = "https://github.com/All-Your-Locks-Are-Belong-To-Us/ctap-types", rev = "03581bab46df23d8acb5fcfb8d74db6626753394" }
 
 [features]
 default = []
