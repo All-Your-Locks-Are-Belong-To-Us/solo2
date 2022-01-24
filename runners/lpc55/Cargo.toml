@@ -133,9 +133,9 @@ log-warn = []
 log-error = []
 
 # FIDO
-enable-fido-2-1-pre = [
-    "fido-authenticator/enable-fido-2-1-pre",
-    "dispatch-fido/enable-fido-2-1-pre",
+enable-fido-2-1 = [
+    "fido-authenticator/enable-fido-2-1",
+    "dispatch-fido/enable-fido-2-1",
 ]
 
 # patch dependencies like so to test local changes
@@ -154,3 +154,6 @@ opt-level = 2
 # TODO: see which if any settings are best for p256-cortex-m4
 # [profile.release.package.nisty]
 # opt-level = 2
+
+[patch."https://github.com/All-Your-Locks-Are-Belong-To-Us/fido-authenticator"]
+fido-authenticator = { path = "../../../fido-authenticator" }

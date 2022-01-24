@@ -103,7 +103,7 @@ pub fn parse_cbor(data: &[u8]) -> core::result::Result<Request, CtapMappingError
             // TODO: ensure earlier that RPC send queue is empty
         }
 
-        #[cfg(feature = "enable-fido-2-1-pre")]
+        #[cfg(feature = "enable-fido-2-1")]
         Operation::LargeBlobs => {
             info!("largeBlobs");
             match cbor_deserialize(&data[1..]) {

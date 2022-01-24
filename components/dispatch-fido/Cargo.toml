@@ -23,7 +23,7 @@ trussed = { git = "https://github.com/trussed-dev/trussed" }
 [features]
 default = []
 
-enable-fido-2-1-pre = ["fido-authenticator/enable-fido-2-1-pre"]
+enable-fido-2-1 = ["fido-authenticator/enable-fido-2-1"]
 
 log-all = []
 log-none = []
